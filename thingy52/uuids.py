@@ -1,0 +1,59 @@
+from bluepy.btle import UUID
+
+# Please see # Ref https://nordicsemiconductor.github.io/Nordic-Thingy52-FW/documentation
+# for more information on the UUIDs of the Services and Characteristics that are being used
+def Nordic_UUID(val):
+    """ Adds base UUID and inserts value to return Nordic UUID """
+    return UUID("EF68%04X-9B35-4933-9B10-52FFA9740042" % val)
+
+
+# service uuid(s) for your peripheral advertises
+TCS_UUID = 'ef6801009b3549339b1052ffa9740042'
+# characteristic to notify for enabling notifications
+TES_UUID = 'ef6802009b3549339b1052ffa9740042'
+
+# Environment
+TES_GAS_UUID = 'ef6802049b3549339b1052ffa9740042'
+TES_TEMP_UUID = 'ef6802019b3549339b1052ffa9740042'
+E_PRESSURE_CHAR_UUID = 0x0202
+TES_PRESS_UUID = 'ef6802029b3549339b1052ffa9740042'
+TES_PRESS_UUID_1 = Nordic_UUID(E_PRESSURE_CHAR_UUID)
+TES_PRESS_UUID_2 = UUID(TES_PRESS_UUID)
+
+# Definition of all UUID used by Thingy
+CCCD_UUID = 0x2902
+
+BATTERY_SERVICE_UUID = 0x180F
+BATTERY_LEVEL_UUID = 0x2A19
+
+ENVIRONMENT_SERVICE_UUID = 0x0200
+E_TEMPERATURE_CHAR_UUID = 0x0201
+E_PRESSURE_CHAR_UUID    = 0x0202
+E_HUMIDITY_CHAR_UUID    = 0x0203
+E_GAS_CHAR_UUID         = 0x0204
+E_COLOR_CHAR_UUID       = 0x0205
+E_CONFIG_CHAR_UUID      = 0x0206
+
+USER_INTERFACE_SERVICE_UUID = 0x0300
+UI_LED_CHAR_UUID            = 0x0301
+UI_BUTTON_CHAR_UUID         = 0x0302
+UI_EXT_PIN_CHAR_UUID        = 0x0303
+
+MOTION_SERVICE_UUID         = 0x0400
+M_CONFIG_CHAR_UUID          = 0x0401
+M_TAP_CHAR_UUID             = 0x0402
+M_ORIENTATION_CHAR_UUID     = 0x0403
+M_QUATERNION_CHAR_UUID      = 0x0404
+M_STEP_COUNTER_UUID         = 0x0405
+M_RAW_DATA_CHAR_UUID        = 0x0406
+M_EULER_CHAR_UUID           = 0x0407
+M_ROTATION_MATRIX_CHAR_UUID = 0x0408
+M_HEAIDNG_CHAR_UUID         = 0x0409
+M_GRAVITY_VECTOR_CHAR_UUID  = 0x040A
+
+SOUND_SERVICE_UUID          = 0x0500
+S_CONFIG_CHAR_UUID          = 0x0501
+S_SPEAKER_DATA_CHAR_UUID    = 0x0502
+S_SPEAKER_STATUS_CHAR_UUID  = 0x0503
+S_MICROPHONE_CHAR_UUID      = 0x0504
+
