@@ -7,7 +7,6 @@ import pytest
 
 from click.testing import CliRunner
 
-from thingy52 import thingy52_SR
 from thingy52 import cli
 
 
