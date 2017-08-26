@@ -7,19 +7,6 @@ def Nordic_UUID(val):
     return UUID("EF68%04X-9B35-4933-9B10-52FFA9740042" % val)
 
 
-# service uuid(s) for your peripheral advertises
-TCS_UUID = 'ef6801009b3549339b1052ffa9740042'
-# characteristic to notify for enabling notifications
-TES_UUID = 'ef6802009b3549339b1052ffa9740042'
-
-# Environment
-TES_GAS_UUID = 'ef6802049b3549339b1052ffa9740042'
-TES_TEMP_UUID = 'ef6802019b3549339b1052ffa9740042'
-E_PRESSURE_CHAR_UUID = 0x0202
-TES_PRESS_UUID = 'ef6802029b3549339b1052ffa9740042'
-TES_PRESS_UUID_1 = Nordic_UUID(E_PRESSURE_CHAR_UUID)
-TES_PRESS_UUID_2 = UUID(TES_PRESS_UUID)
-
 # Definition of all UUID used by Thingy
 CCCD_UUID = 0x2902
 
