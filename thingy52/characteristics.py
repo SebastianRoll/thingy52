@@ -8,10 +8,9 @@ ThingyChar = namedtuple('ThingyChar', ['uuid', 'common_name', 'conversion_func']
 
 c_type_double = Struct('< d').unpack
 
-def unpack_float(struct, data):
-    (integer, decimal) = struct.unpack(data)
-    temperature = float(integer + decimal / 100)
-    return temperature
+
+def unpack_float(integer, decimal):
+    return float(integer + decimal / 100)
 
 
 def unpack_bool(data):
@@ -21,13 +20,15 @@ def unpack_bool(data):
 
 def temp(data):
     s = Struct('< bB')  # < (little endian) B (unsigned int single byte)
-    temperature = unpack_float(s, data)
+    (integer, decimal) = s.unpack(data)
+    temperature = unpack_float(integer, decimal)
     return temperature
 
 
 def pressure(data):
     s = Struct('< iB')  # < (little endian) B (integer single byte)
-    return unpack_float(s, data)
+    (integer, decimal) = s.unpack(data)
+    return unpack_float(integer, decimal)
 
 
 def humidity(data):

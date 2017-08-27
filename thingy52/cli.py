@@ -46,11 +46,19 @@ def list(address):
 
 @main.command()
 @click.argument('address')
-def listen(address):
+@click.argument('feature')
+def listen(address, feature):
     """
     List topics.
     """
-    thingy52.listen_to_thingy(address)
+    t = thingy52.Thingy52(address)
+    atexit.register(t.disconnect)
+    t.setDelegate(thingy52.ThingyCharDelegate(t.handles))
+    t.motion.toggle_notifications(characteristic=feature)
+    #t.environment.toggle_notifications()
+    while True:
+        t.waitForNotifications(1.0)
+        print("Waiting...")
 
 
 if __name__ == "__main__":

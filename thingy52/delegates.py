@@ -11,6 +11,7 @@ class ThingyCharDelegate(DefaultDelegate):
 
         print(name)
         print(len(["0x%02x" % b for b in data]), "BYTES")
+        print(["0x%02x" % b for b in data])
 
         val = thingy_char.conversion_func(data)
         print("{}: {}".format(name, val))
