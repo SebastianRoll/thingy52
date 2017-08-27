@@ -51,6 +51,31 @@ def extract_tap_data(data):
     count = teptep[2:4]
     return (direction, count)
 
+def rotation(data):
+    """
+    3 rotation axes
+    :param data:
+    :return:
+    """
+    s = Struct('< 9h')
+    rot_matrix = s.unpack(data)
+    return rot_matrix
+
+def euler(data):
+    (roll, pitch, yaw) = Struct('< 3i').unpack(data)
+    return (roll, pitch, yaw)
+
+def degToCompass(num):
+    val=int((num/22.5)+.5)
+    arr=["N","NNE","NE","ENE","E","ESE", "SE", "SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"]
+    return arr[(val % 16)]
+
+def heading(data):
+    h = Struct('< i').unpack(data)
+    heading = int(360 * h[0] / 23580000)
+    compass = degToCompass(heading)
+    return compass
+
 
 battery_level = ThingyChar(Nordic_UUID(BATTERY_LEVEL_UUID), 'battery level', b2a_hex)
 temperature = ThingyChar(Nordic_UUID(E_TEMPERATURE_CHAR_UUID), 'temperature', temp)
@@ -67,9 +92,9 @@ m_orient = ThingyChar(Nordic_UUID(M_ORIENTATION_CHAR_UUID), 'orientation', c_typ
 m_quaternion = ThingyChar(Nordic_UUID(M_QUATERNION_CHAR_UUID), 'quaternion', b2a_hex)
 m_stepcnt = ThingyChar(Nordic_UUID(M_STEP_COUNTER_UUID), 'step_count', b2a_hex)
 m_rawdata = ThingyChar(Nordic_UUID(M_RAW_DATA_CHAR_UUID), 'rawdata', b2a_hex)
-m_euler = ThingyChar(Nordic_UUID(M_EULER_CHAR_UUID), 'euler', b2a_hex)
-m_rotation = ThingyChar(Nordic_UUID(M_ROTATION_MATRIX_CHAR_UUID), 'rotation', b2a_hex)
-m_heading = ThingyChar(Nordic_UUID(M_HEAIDNG_CHAR_UUID), 'heading', b2a_hex)
+m_euler = ThingyChar(Nordic_UUID(M_EULER_CHAR_UUID), 'euler', euler)
+m_rotation = ThingyChar(Nordic_UUID(M_ROTATION_MATRIX_CHAR_UUID), 'rotation', rotation)
+m_heading = ThingyChar(Nordic_UUID(M_HEAIDNG_CHAR_UUID), 'heading', heading)
 m_gravity = ThingyChar(Nordic_UUID(M_GRAVITY_VECTOR_CHAR_UUID), 'gravity', b2a_hex)
 
 s_speaker_status = ThingyChar(Nordic_UUID(S_SPEAKER_STATUS_CHAR_UUID), 'speaker_status', b2a_hex)
