@@ -1,4 +1,3 @@
-from bluepy.btle import Service
 from thingy52.uuids import *
 from thingy52.characteristics import *
 
