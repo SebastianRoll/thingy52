@@ -7,6 +7,7 @@ import atexit
 
 from . import __version__
 from . import thingy52
+from thingy52 import delegates
 
 CONTEXT_SETTINGS = dict(
     obj={},
@@ -70,7 +71,7 @@ def motion(ctx, feature, enable):
 
     t = thingy52.Thingy52(address)
     atexit.register(t.disconnect)
-    t.setDelegate(thingy52.ThingyCharDelegate(t.handles))
+    t.setDelegate(delegates.ThingyCharDelegate(t.handles))
     t.motion.toggle_notifications(characteristic=feature, enable=enable)
     while True:
         t.waitForNotifications(1.0)
