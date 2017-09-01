@@ -76,6 +76,10 @@ def heading(data):
     compass = degToCompass(heading)
     return compass
 
+def orientation(data):
+    h = int(Struct('< B').unpack(data)[0])
+    return h
+
 
 battery_level = ThingyChar(Nordic_UUID(BATTERY_LEVEL_UUID), 'battery level', b2a_hex)
 temperature = ThingyChar(Nordic_UUID(E_TEMPERATURE_CHAR_UUID), 'temperature', temp)
@@ -88,7 +92,8 @@ config = ThingyChar(Nordic_UUID(E_CONFIG_CHAR_UUID), 'config', b2a_hex)
 ui_button = ThingyChar(Nordic_UUID(UI_BUTTON_CHAR_UUID), 'ui_button', unpack_bool)
 
 m_tap = ThingyChar(Nordic_UUID(M_TAP_CHAR_UUID), 'tap', extract_tap_data)
-m_orient = ThingyChar(Nordic_UUID(M_ORIENTATION_CHAR_UUID), 'orientation', c_type_double)
+m_tap = ThingyChar(Nordic_UUID(M_TAP_CHAR_UUID), 'tap', extract_tap_data)
+m_orient = ThingyChar(Nordic_UUID(M_ORIENTATION_CHAR_UUID), 'orientation', orientation)
 m_quaternion = ThingyChar(Nordic_UUID(M_QUATERNION_CHAR_UUID), 'quaternion', b2a_hex)
 m_stepcnt = ThingyChar(Nordic_UUID(M_STEP_COUNTER_UUID), 'step_count', b2a_hex)
 m_rawdata = ThingyChar(Nordic_UUID(M_RAW_DATA_CHAR_UUID), 'rawdata', b2a_hex)
