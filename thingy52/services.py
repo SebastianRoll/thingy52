@@ -9,14 +9,14 @@ class ThingyService(object):
 
     service_uid = None
 
-    thingy_chars = []
+    notify_chars = []
 
     def __init__(self, peripheral):
         self.peripheral = peripheral
         self.uuid = Nordic_UUID(self.service_uid)
         self.service = self.peripheral.getServiceByUUID(self.uuid)
 
-        self.chars_map = {c.common_name: c for c in self.thingy_chars}
+        self.chars_map = {c.common_name: c for c in self.notify_chars}
 
     def list_notifications(self):
         return self.chars_map.keys()
@@ -44,7 +44,7 @@ class EnvironmentService(ThingyService):
     """
     service_uid = ENVIRONMENT_SERVICE_UUID
 
-    thingy_chars = [
+    notify_chars = [
         ThingyChar(Nordic_UUID(E_TEMPERATURE_CHAR_UUID), 'temperature', temp),
         ThingyChar(Nordic_UUID(E_PRESSURE_CHAR_UUID), 'pressure', pressure),
         ThingyChar(Nordic_UUID(E_HUMIDITY_CHAR_UUID), 'humidity', humidity),
@@ -60,7 +60,7 @@ class MotionService(ThingyService):
     """
     service_uid = MOTION_SERVICE_UUID
 
-    thingy_chars = [
+    notify_chars = [
         ThingyChar(Nordic_UUID(M_TAP_CHAR_UUID), 'tap', extract_tap_data),
         ThingyChar(Nordic_UUID(M_ORIENTATION_CHAR_UUID), 'orientation', c_type_double),
         ThingyChar(Nordic_UUID(M_QUATERNION_CHAR_UUID), 'quaternion', b2a_hex),
@@ -79,7 +79,7 @@ class UserInterfaceService(ThingyService):
     """
     service_uid = USER_INTERFACE_SERVICE_UUID
 
-    thingy_chars = [
+    notify_chars = [
         ThingyChar(Nordic_UUID(UI_BUTTON_CHAR_UUID), 'button', unpack_bool),
         ThingyChar(Nordic_UUID(UI_LED_CHAR_UUID), 'led', unpack_bool),
     ]
@@ -91,7 +91,7 @@ class SoundService(ThingyService):
     """
     service_uid = SOUND_SERVICE_UUID
 
-    thingy_chars = [
+    notify_chars = [
         ThingyChar(Nordic_UUID(S_SPEAKER_STATUS_CHAR_UUID), 'speaker_status', b2a_hex),
         ThingyChar(Nordic_UUID(S_MICROPHONE_CHAR_UUID), 'microphone', b2a_hex),
     ]
