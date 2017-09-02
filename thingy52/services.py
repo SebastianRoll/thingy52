@@ -21,7 +21,7 @@ class ThingyService(object):
     def list_notifications(self):
         return self.chars_map.keys()
 
-    def toggle_notifications(self, enable=True, characteristic=None):
+    def toggle_notifications(self, characteristic=None, enable=True):
         """
         Switches notifications on or off.
         :param enable: notifications on or off
@@ -81,6 +81,7 @@ class UserInterfaceService(ThingyService):
 
     thingy_chars = [
         ThingyChar(Nordic_UUID(UI_BUTTON_CHAR_UUID), 'button', unpack_bool),
+        ThingyChar(Nordic_UUID(UI_LED_CHAR_UUID), 'led', unpack_bool),
     ]
 
 

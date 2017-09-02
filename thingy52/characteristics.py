@@ -89,7 +89,7 @@ gas = ThingyChar(Nordic_UUID(E_GAS_CHAR_UUID), 'gas', extract_gas_data)
 color = ThingyChar(Nordic_UUID(E_COLOR_CHAR_UUID), 'color', b2a_hex)
 config = ThingyChar(Nordic_UUID(E_CONFIG_CHAR_UUID), 'config', b2a_hex)
 
-ui_button = ThingyChar(Nordic_UUID(UI_BUTTON_CHAR_UUID), 'ui_button', unpack_bool)
+ui_button = ThingyChar(Nordic_UUID(UI_BUTTON_CHAR_UUID), 'button', unpack_bool)
 
 m_tap = ThingyChar(Nordic_UUID(M_TAP_CHAR_UUID), 'tap', extract_tap_data)
 m_tap = ThingyChar(Nordic_UUID(M_TAP_CHAR_UUID), 'tap', extract_tap_data)
@@ -103,7 +103,7 @@ m_heading = ThingyChar(Nordic_UUID(M_HEAIDNG_CHAR_UUID), 'heading', heading)
 m_gravity = ThingyChar(Nordic_UUID(M_GRAVITY_VECTOR_CHAR_UUID), 'gravity', b2a_hex)
 
 s_speaker_status = ThingyChar(Nordic_UUID(S_SPEAKER_STATUS_CHAR_UUID), 'speaker_status', b2a_hex)
-s_microphone = ThingyChar(Nordic_UUID(S_MICROPHONE_CHAR_UUID), 'microphone', b2a_hex)
+s_microphone = ThingyChar(Nordic_UUID(S_MICROPHONE_CHAR_UUID), 'microphone', lambda bytes: bytes)
 
 thingy_chars = [
     temperature,
