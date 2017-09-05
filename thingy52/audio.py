@@ -4,35 +4,41 @@ import pyaudio
 import wave
 import audioop
 import binascii
+from struct import Struct
+import struct
 
 CHUNK = 20
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
-RATE = 11025
+# https://infocenter.nordicsemi.com/index.jsp?topic=%2Fcom.nordic.infocenter.rds%2Fdita%2Frds%2Fdesigns%2Fthingy%2Fintro%2Fkey_features.html
+RATE = 16000
 RECORD_SECONDS = 5
 WAVE_OUTPUT_FILENAME = "output.wav"
 
 # Intel ADPCM step variation table
-INDEX_TABLE = [-1, -1, -1, -1, 2, 4, 6, 8, -1, -1, -1, -1, 2, 4, 6, 8,]
+INDEX_TABLE = [-1, -1, -1, -1, 2, 4, 6, 8, -1, -1, -1, -1, 2, 4, 6, 8, ]
 
 # ADPCM step size table
-STEP_SIZE_TABLE = [7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45, 50, 55, 60, 66, 73, 80, 88, 97, 107, 118, 130, 143, 157, 173, 190, 209,
-        230, 253, 279, 307, 337, 371, 408, 449, 494, 544, 598, 658, 724, 796, 876, 963, 1060, 1166, 1282, 1411, 1552, 1707, 1878, 2066, 2272, 2499, 2749, 3024, 3327, 3660, 4026, 4428, 4871, 5358,
-        5894, 6484, 7132, 7845, 8630, 9493, 10442, 11487, 12635, 13899, 15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794, 32767]
+STEP_SIZE_TABLE = [7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45, 50, 55, 60, 66, 73, 80,
+                   88, 97, 107, 118, 130, 143, 157, 173, 190, 209,
+                   230, 253, 279, 307, 337, 371, 408, 449, 494, 544, 598, 658, 724, 796, 876, 963, 1060, 1166, 1282,
+                   1411, 1552, 1707, 1878, 2066, 2272, 2499, 2749, 3024, 3327, 3660, 4026, 4428, 4871, 5358,
+                   5894, 6484, 7132, 7845, 8630, 9493, 10442, 11487, 12635, 13899, 15289, 16818, 18500, 20350, 22385,
+                   24623, 27086, 29794, 32767]
+
 
 class RecordingDelegate(DefaultDelegate):
     def __init__(self, handles):
         DefaultDelegate.__init__(self)
         self.handles = handles
 
-
         self.p = pyaudio.PyAudio()
 
         self.stream = self.p.open(format=FORMAT,
-                        channels=CHANNELS,
-                        rate=RATE,
-                        input=True,
-                        frames_per_buffer=CHUNK)
+                                  channels=CHANNELS,
+                                  rate=RATE,
+                                  input=True,
+                                  frames_per_buffer=CHUNK)
 
         print("* recording")
 
@@ -41,19 +47,8 @@ class RecordingDelegate(DefaultDelegate):
         self.state = None
 
     def handleNotification(self, cHandle, data):
-        thingy_char = self.handles[cHandle]
-
-        val = thingy_char.conversion_func(data)
-        #print(val)
-        pcm, self.state = audioop.adpcm2lin(val, 4, self.state)
-        #pcm, self.state = audioop.adpcm2lin(binascii.a2b_hex(data), 4, self.state)
+        pcm, self.state = audioop.adpcm2lin(data, 2, self.state)
         self.frames.append(pcm)
-
-        # data = self.stream.read(CHUNK)
-        """
-        for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
-            data = self.stream.read(CHUNK)
-            self.frames.append(data)"""
 
     def finish(self):
         print("* done recording")
@@ -69,6 +64,65 @@ class RecordingDelegate(DefaultDelegate):
         wf.writeframes(b''.join(self.frames))
         wf.close()
 
+
+class RecordingDelegate3(DefaultDelegate):
+    def __init__(self, handles):
+        DefaultDelegate.__init__(self)
+        self.handles = handles
+        self.p = pyaudio.PyAudio()
+        self.frames = []
+        self.state = None
+
+        self.adpcmfile = open("recording.adpcm", "wb")
+
+        print("* recording")
+        self.numframes = 0
+
+    def handleNotification(self, cHandle, data):
+        self.adpcmfile.write(data)
+        self.numframes += 1
+
+    def finish(self):
+        self.adpcmfile.close()
+        print("* done recording", self.numframes, "frames")
+
+        with open('recording.adpcm', 'rb') as f:
+            adpcm = f.read()
+        pcm, _ = audioop.adpcm2lin(adpcm, 2, None)
+        # data length is 20 bytes, pcm length is 80 bytes
+        self.wavfile = wave.open("out2" + '.wav', 'wb')
+        self.wavfile.setparams((2, 2, 16000, 0, 'NONE', 'NONE'))
+        self.wavfile.close()
+
+
+class RecordingDelegate4(DefaultDelegate):
+    def __init__(self, handles):
+        DefaultDelegate.__init__(self)
+        self.handles = handles
+        self.p = pyaudio.PyAudio()
+        self.frames = []
+        self.state = None
+
+        self.stream = self.audio.open(
+            format=pyaudio.paInt16,
+            channels=1, rate=16000,
+            output=True, stream_callback=self.on_audio_ready)
+
+        self.wavfile = wave.open("out2" + '.wav', 'wb')
+        self.wavfile.setnchannels(CHANNELS)
+        self.wavfile.setsampwidth(self.p.get_sample_size(FORMAT))
+        self.wavfile.setframerate(RATE)
+        self.numframes = 0
+        print("* recording")
+
+    def handleNotification(self, cHandle, data):
+        pcm = adpcm_decode(data)
+        self.wavfile.writeframes(pcm)
+        self.numframes += 1
+
+    def finish(self):
+        print("* done recording", self.numframes, "frames")
+        self.wavfile.close()
 
 
 if __name__ == "__main__":
@@ -108,37 +162,51 @@ if __name__ == "__main__":
     wf.writeframes(b''.join(frames))
     wf.close()
 
+
 def adpcm_decode(adpcm):
+    """
+    Attempt to replicate node implementation from
+    https://github.com/NordicSemiconductor/Nordic-Thingy52-Nodejs/blob/master/examples/microphone.js
+    :param adpcm: bytes array
+    :return: pcm
+    """
+    s = Struct('< hb17s')
+    (valuePredicted, index, data) = s.unpack(adpcm)
 
     # Allocate output buffer
-    #pcm = new Buffer(adpcm.data.length*4)
-    pcm = []
+    # pcm = new Buffer(adpcm.data.length*4)
+    # pcm = []*len(adpcm)*4
+    pcm = b''
     # The first 2 bytes of ADPCM frame are the predicted value
-    valuePredicted = adpcm.header.readInt16BE(0)
+    # valuePredicted = adpcm.header.readInt16BE(0)
     # The 3rd byte is the index value
-    index = adpcm.header.readInt8(2)
+    # index = adpcm.header.readInt8(2)
 
     if index < 0:
         index = 0
     if index > 88:
         index = 88
 
-    #diff #/* Current change to valuePredicted */
+    # diff #/* Current change to valuePredicted */
     bufferStep = False
     inputBuffer = 0
     delta = 0
     sign = 0
     step = STEP_SIZE_TABLE[index]
     _in = 0
-    for _out in range(0, adpcm.data.length, step=2):
+    _out = 0
+    # for (var _in = 0, _out = 0; _in < adpcm.data.length; _out += 2) {
+    # for _out in range(0, adpcm.data.length, step=2):
+    # for _out in range(0, len(data), 2):
+    while _in < len(adpcm):
 
-        #for (var _in = 0, _out = 0; _in < adpcm.data.length; _out += 2) {
         # Step 1 - get the delta value */
         if bufferStep:
             delta = inputBuffer & 0x0F
             _in += 1
         else:
-            inputBuffer = adpcm.data.readInt8(_in)
+            # inputBuffer = adpcm.data.readInt8(_in)
+            inputBuffer = adpcm[_in]
             delta = (inputBuffer >> 4) & 0x0F
         bufferStep = not bufferStep
 
@@ -148,7 +216,6 @@ def adpcm_decode(adpcm):
             index = 0
         if index > 88:
             index = 88
-
 
         # /* Step 3 - Separate sign and magnitude */
         sign = delta & 8
@@ -168,7 +235,7 @@ def adpcm_decode(adpcm):
         else:
             valuePredicted += diff
 
-        #/* Step 5 - clamp output value */
+        # /* Step 5 - clamp output value */
         if valuePredicted > 32767:
             valuePredicted = 32767
         elif valuePredicted < -32768:
@@ -178,6 +245,9 @@ def adpcm_decode(adpcm):
         step = STEP_SIZE_TABLE[index]
 
         # /* Step 7 - Output value */
-        pcm.writeInt16LE(valuePredicted,  _out)
+        # pcm.writeInt16LE(valuePredicted,  _out)
+        pcm += struct.pack('< h', valuePredicted)
+
+        _out += 2
 
     return pcm
