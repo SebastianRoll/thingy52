@@ -45,3 +45,9 @@ class Thingy52(Peripheral):
         self.handles[char.getHandle()] = thingy_char
         self.writeCharacteristic(char.getHandle() + 1, NOTIFY_ON if enable else NOTIFY_OFF)
 
+    def write(self, char, command):
+        # Todo: Exception handling for char.uuid not found in dict
+        thingy_char = thingy_chars_map[char.uuid]
+        print(thingy_char)
+        self.handles[char.getHandle()] = thingy_char
+        self.writeCharacteristic(char.getHandle(), command)

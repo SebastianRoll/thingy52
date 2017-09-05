@@ -8,7 +8,9 @@ import atexit
 from . import __version__
 from . import thingy52
 from thingy52 import delegates
-from thingy52.audio import RecordingDelegate
+from thingy52.audio import RecordingDelegate4
+from thingy52.services import Color
+import time
 
 CONTEXT_SETTINGS = dict(
     obj={},
@@ -84,7 +86,6 @@ def motion(ctx, feature, enable):
 @click.pass_context
 def sound(ctx, feature, enable):
     """
-    Enable/Disable motion characteristics.
     """
     address = ctx.obj.get("address")
     print(address)
@@ -101,19 +102,49 @@ def sound(ctx, feature, enable):
 @click.pass_context
 def record(ctx):
     """
-    Enable/Disable motion characteristics.
+    """
+    address = ctx.obj.get("address")
+
+    t = thingy52.Thingy52(address)
+    # Set mic mode to ADPCM
+    t.sound.activate_speaker_stream(1, 1)
+
+    atexit.register(t.disconnect)
+    rec = RecordingDelegate4(t.handles)
+    t.setDelegate(rec)
+    atexit.register(rec.finish)
+    t.sound.toggle_notifications(characteristic="microphone", enable=True)
+    now = time.time()
+    while time.time() - now < 3:
+        t.waitForNotifications(1.0)
+
+@main.command()
+@click.pass_context
+def speaker_stream(ctx):
+    """
     """
     address = ctx.obj.get("address")
 
     t = thingy52.Thingy52(address)
     atexit.register(t.disconnect)
-    rec = RecordingDelegate(t.handles)
-    t.setDelegate(rec)
-    atexit.register(rec.finish)
-    t.sound.toggle_notifications(characteristic="microphone", enable=True)
-    for i in range(100):
-        t.waitForNotifications(1.0)
 
+    t.sound.activate_speaker_stream(2, 1)
+    while True:
+        print("k")
+        t.sound.stream_speaker()
+
+
+@main.command()
+@click.pass_context
+def speaker_frequency(ctx):
+    """
+    """
+    address = ctx.obj.get("address")
+
+    t = thingy52.Thingy52(address)
+    atexit.register(t.disconnect)
+    t.sound.activate_speaker_stream(1, 1)
+    t.sound.stream_frequency(10500, 500, 50)
 
 
 @main.command()
@@ -131,6 +162,24 @@ def demo_led(ctx):
     t.ui.toggle_notifications(characteristic="button", enable=True)
     while True:
         t.waitForNotifications(1.0)
+
+
+@main.command()
+@click.pass_context
+def demo_led2(ctx):
+    """
+    Enable/Disable motion characteristics.
+    """
+    address = ctx.obj.get("address")
+
+    t = thingy52.Thingy52(address)
+    atexit.register(t.disconnect)
+    t.setDelegate(delegates.ThingyCharDelegate(t.handles))
+    t.ui.rgb_breathe(color=Color.CYAN)
+    t.sound.play_sample()
+    while True:
+        t.waitForNotifications(1.0)
+        print("Waiting...")
 
 
 

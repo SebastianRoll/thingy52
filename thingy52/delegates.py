@@ -1,4 +1,8 @@
 from bluepy.btle import DefaultDelegate
+import math
+
+from thingy52.services import AudioSample
+
 
 class ThingyCharDelegate(DefaultDelegate):
     def __init__(self, handles):
@@ -29,13 +33,20 @@ class Demo1Delegate(DefaultDelegate):
         name = thingy_char.common_name
         val = thingy_char.conversion_func(data)
 
-        if name is "button" and val is True :
-            self.button_pressed()
+        if name is "button" and val is True:
+            self.on_button_pressed()
+        elif name is "heading":
+            r = abs(int(255 * math.sin(math.radians(val))))
+            g = 0
+            b = abs(int(255 * math.cos(math.radians(val))))
+            self.thingy52.ui.rgb_constant(r, g, b)
 
-        print("{}: {}".format(name, val))
-
-    def button_pressed(self):
+    def on_button_pressed(self):
         self._button_activated = not self._button_activated
-        self.thingy52.environment.toggle_notifications("temperature", enable=self._button_activated)
-
-
+        if self._button_activated:
+            self.thingy52.sound.play_sample(AudioSample.COIN_1)
+            self.thingy52.ui.rgb_constant(0, 255, 0)
+        else:
+            self.thingy52.sound.play_sample(AudioSample.HIT)
+            self.thingy52.ui.rgb_constant(255, 0, 0)
+        self.thingy52.motion.toggle_notifications("heading", enable=self._button_activated)

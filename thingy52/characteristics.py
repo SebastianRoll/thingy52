@@ -70,6 +70,11 @@ def degToCompass(num):
     arr=["N","NNE","NE","ENE","E","ESE", "SE", "SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"]
     return arr[(val % 16)]
 
+def heading_degrees(data):
+    h = Struct('< i').unpack(data)
+    heading = int(360 * h[0] / 23580000)
+    return heading
+
 def heading(data):
     h = Struct('< i').unpack(data)
     heading = int(360 * h[0] / 23580000)
@@ -90,6 +95,7 @@ color = ThingyChar(Nordic_UUID(E_COLOR_CHAR_UUID), 'color', b2a_hex)
 config = ThingyChar(Nordic_UUID(E_CONFIG_CHAR_UUID), 'config', b2a_hex)
 
 ui_button = ThingyChar(Nordic_UUID(UI_BUTTON_CHAR_UUID), 'button', unpack_bool)
+ui_led = ThingyChar(Nordic_UUID(UI_LED_CHAR_UUID), 'led', unpack_bool)
 
 m_tap = ThingyChar(Nordic_UUID(M_TAP_CHAR_UUID), 'tap', extract_tap_data)
 m_tap = ThingyChar(Nordic_UUID(M_TAP_CHAR_UUID), 'tap', extract_tap_data)
@@ -99,10 +105,12 @@ m_stepcnt = ThingyChar(Nordic_UUID(M_STEP_COUNTER_UUID), 'step_count', b2a_hex)
 m_rawdata = ThingyChar(Nordic_UUID(M_RAW_DATA_CHAR_UUID), 'rawdata', b2a_hex)
 m_euler = ThingyChar(Nordic_UUID(M_EULER_CHAR_UUID), 'euler', euler)
 m_rotation = ThingyChar(Nordic_UUID(M_ROTATION_MATRIX_CHAR_UUID), 'rotation', rotation)
-m_heading = ThingyChar(Nordic_UUID(M_HEAIDNG_CHAR_UUID), 'heading', heading)
+m_heading = ThingyChar(Nordic_UUID(M_HEAIDNG_CHAR_UUID), 'heading', heading_degrees)
 m_gravity = ThingyChar(Nordic_UUID(M_GRAVITY_VECTOR_CHAR_UUID), 'gravity', b2a_hex)
 
 s_speaker_status = ThingyChar(Nordic_UUID(S_SPEAKER_STATUS_CHAR_UUID), 'speaker_status', b2a_hex)
+config_characteristic = ThingyChar(Nordic_UUID(S_CONFIG_CHAR_UUID), 'config_characteristic', b2a_hex)
+speaker_characteristic = ThingyChar(Nordic_UUID(S_SPEAKER_DATA_CHAR_UUID), 'speaker_characteristic', b2a_hex)
 s_microphone = ThingyChar(Nordic_UUID(S_MICROPHONE_CHAR_UUID), 'microphone', lambda bytes: bytes)
 
 thingy_chars = [
@@ -112,6 +120,7 @@ thingy_chars = [
     gas,
     color,
     ui_button,
+    ui_led,
     m_tap,
     m_orient,
     m_quaternion,
@@ -122,6 +131,8 @@ thingy_chars = [
     m_heading,
     m_gravity,
     s_speaker_status,
+    config_characteristic,
+    speaker_characteristic,
     s_microphone,
 ]
 

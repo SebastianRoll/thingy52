@@ -1,5 +1,36 @@
 from thingy52.uuids import *
 from thingy52.characteristics import *
+from enum import Enum
+from random import randint
+
+
+class Color(Enum):
+    RED = 1
+    GREEN = 2
+    YELLOW = 3
+    BLUE = 4
+    PURPLE = 5
+    CYAN = 6
+    WHITE = 7
+
+
+class LedMode(Enum):
+    OFF = 0
+    CONSTANT = 1
+    BREATHE = 2
+    ONE_SHOT = 3
+
+
+class AudioSample(Enum):
+    COIN_1 = 0
+    COIN_2 = 1
+    EXPLOSION_1 = 2
+    EXPLOSION_2 = 3
+    HIT = 4
+    PICKUP_1 = 5
+    PICKUP_2 = 6
+    SHOOT_1 = 7
+    SHOOT_2 = 8
 
 
 class ThingyService(object):
@@ -10,6 +41,8 @@ class ThingyService(object):
     service_uid = None
 
     notify_chars = []
+
+    write_chars = []
 
     def __init__(self, peripheral):
         self.peripheral = peripheral
@@ -84,6 +117,44 @@ class UserInterfaceService(ThingyService):
         ThingyChar(Nordic_UUID(UI_LED_CHAR_UUID), 'led', unpack_bool),
     ]
 
+    """write_chars = [
+        ThingyChar(Nordic_UUID(UI_LED_CHAR_UUID), 'led', unpack_bool),
+    ]"""
+
+    def rgb_off(self):
+        char_uuid = self.chars_map["led"].uuid
+        char = self.service.getCharacteristics(forUUID=char_uuid)[0]
+        s = Struct('> 4B')
+        led_command = s.pack(LedMode.CONSTANT.value)
+        char.write(led_command, True)
+
+    def rgb_constant(self, r, g, b):
+        char_uuid = self.chars_map["led"].uuid
+        char = self.service.getCharacteristics(forUUID=char_uuid)[0]
+
+        s = Struct('> 4B')
+        values = (LedMode.CONSTANT.value, r, g, b)
+        led_command = s.pack(*values)
+        char.write(led_command, True)
+
+    def rgb_breathe(self, color=Color.RED, intensity=100, delay=1):
+        char_uuid = self.chars_map["led"].uuid
+        char = self.service.getCharacteristics(forUUID=char_uuid)[0]
+
+        s = Struct('> 3BH')
+        values = (LedMode.BREATHE.value, color.value, intensity, delay)
+        led_command = s.pack(*values)
+        char.write(led_command, True)
+
+    def rgb_one_shot(self, color=Color.RED, intensity=100):
+        char_uuid = self.chars_map["led"].uuid
+        char = self.service.getCharacteristics(forUUID=char_uuid)[0]
+
+        s = Struct('> 3B')
+        values = (LedMode.ONE_SHOT.value, color.value, intensity)
+        led_command = s.pack(*values)
+        char.write(led_command, True)
+
 
 class SoundService(ThingyService):
     """
@@ -93,5 +164,43 @@ class SoundService(ThingyService):
 
     notify_chars = [
         ThingyChar(Nordic_UUID(S_SPEAKER_STATUS_CHAR_UUID), 'speaker_status', b2a_hex),
+        ThingyChar(Nordic_UUID(S_CONFIG_CHAR_UUID), 'config_characteristic', b2a_hex),
+        ThingyChar(Nordic_UUID(S_SPEAKER_DATA_CHAR_UUID), 'speaker_characteristic', b2a_hex),
         ThingyChar(Nordic_UUID(S_MICROPHONE_CHAR_UUID), 'microphone', b2a_hex),
     ]
+
+    def activate_speaker_stream(self, speaker_mode=2, mic_mode=1):
+        char_uuid_config = self.chars_map["config_characteristic"].uuid
+        char_config = self.service.getCharacteristics(forUUID=char_uuid_config)[0]
+        bytes = Struct('> 2B').pack(speaker_mode, mic_mode)
+        char_config.write(bytes, True)
+
+    def stream_speaker(self):
+        char_uuid = self.chars_map["speaker_characteristic"].uuid
+        char = self.service.getCharacteristics(forUUID=char_uuid)[0]
+        s = Struct('> 120B')
+        m = (randint(0, 100) for i in range(120))
+        command = s.pack(*m)
+        print("packed")
+        char.write(command, True)
+        print("written")
+
+    def stream_frequency(self, frequency, duration, volume):
+        char_uuid = self.chars_map["speaker_characteristic"].uuid
+        char = self.service.getCharacteristics(forUUID=char_uuid)[0]
+        s = Struct('> HHB')
+        command = s.pack(frequency, duration, volume)
+        char.write(command, True)
+
+    def play_sample(self, sample=AudioSample.SHOOT_1):
+        char_uuid_config = self.chars_map["config_characteristic"].uuid
+        char_config = self.service.getCharacteristics(forUUID=char_uuid_config)[0]
+        bytes = Struct('> 2B').pack(3, 1)
+        char_config.write(bytes, True)
+
+        char_uuid = self.chars_map["speaker_characteristic"].uuid
+        char = self.service.getCharacteristics(forUUID=char_uuid)[0]
+
+        s = Struct('> B')
+        command = s.pack(sample.value)
+        char.write(command, True)
