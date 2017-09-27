@@ -28,22 +28,17 @@ Interface to Thingy:52
 Install
 -------
 
-Python 2:
-
-.. highlight:: bash
-
-    $ sudo apt-get install python-pip libglib2.0-dev
-
 Python 3:
 .. highlight:: bash
 
-    $ sudo apt-get install python3-pip libglib2.0-dev
+    $ sudo apt-get install libglib2.0-dev
+    $ pip install thingy52
 
 If you find bluepy-helper isn't being built, please try:
 
 .. highlight:: bash
 
-    $ sudo pip install --no-binary :all: bluepy
+    $ pip install --no-binary :all: thingy52
 
 Features
 --------

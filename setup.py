@@ -29,7 +29,7 @@ test_requirements = [
 
 setup(
     name='thingy52',
-    version='0.1.1',
+    version='0.1.3',
     description="Interface to Thingy:52",
     long_description=readme + '\n\n' + history,
     author="Sebastian Roll",
