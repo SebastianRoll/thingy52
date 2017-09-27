@@ -2,7 +2,7 @@ from thingy52.uuids import *
 from thingy52.characteristics import *
 from enum import Enum
 from random import randint
-
+import binascii
 
 class Color(Enum):
     RED = 1
@@ -121,11 +121,19 @@ class UserInterfaceService(ThingyService):
         ThingyChar(Nordic_UUID(UI_LED_CHAR_UUID), 'led', unpack_bool),
     ]"""
 
+    def rgb_read(self):
+        char_uuid = self.chars_map["led"].uuid
+        char = self.service.getCharacteristics(forUUID=char_uuid)[0]
+        handle = char.getHandle()
+        data = self.peripheral.readCharacteristic(handle)
+        (mode, r, g, b, _) = Struct('> 5B').unpack(data)
+        return data[0]
+
     def rgb_off(self):
         char_uuid = self.chars_map["led"].uuid
         char = self.service.getCharacteristics(forUUID=char_uuid)[0]
-        s = Struct('> 4B')
-        led_command = s.pack(LedMode.CONSTANT.value)
+        s = Struct('> B')
+        led_command = s.pack(LedMode.OFF.value)
         char.write(led_command, True)
 
     def rgb_constant(self, r, g, b):
