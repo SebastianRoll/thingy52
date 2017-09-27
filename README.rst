@@ -25,10 +25,36 @@ Interface to Thingy:52
 * Documentation: https://thingy52.readthedocs.io.
 
 
+Install
+-------
+
+Python 2:
+
+.. highlight:: bash
+
+    $ sudo apt-get install python-pip libglib2.0-dev
+
+Python 3:
+.. highlight:: bash
+
+    $ sudo apt-get install python3-pip libglib2.0-dev
+
+If you find bluepy-helper isn't being built, please try:
+
+.. highlight:: bash
+
+    $ sudo pip install --no-binary :all: bluepy
+
 Features
 --------
 
 * TODO
+
+More information
+----------------
+
+* https://nordicsemiconductor.github.io/Nordic-Thingy52-FW/documentation/firmware_architecture.html
+* https://infocenter.nordicsemi.com/index.jsp?topic=%2Fcom.nordic.infocenter.rds%2Fdita%2Frds%2Fdesigns%2Fthingy%2Fhw_description%2Fhw_descr.html&cp=9_0_6
 
 Credits
 ---------
