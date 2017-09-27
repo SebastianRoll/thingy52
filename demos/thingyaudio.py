@@ -3,17 +3,20 @@ from bluepy.btle import DefaultDelegate
 import pyaudio
 import wave
 import audioop
-import binascii
 from struct import Struct
 import struct
+import numpy as np
+import scipy.signal as signal
 
-CHUNK = 20
+CHUNK = 256
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
 # https://infocenter.nordicsemi.com/index.jsp?topic=%2Fcom.nordic.infocenter.rds%2Fdita%2Frds%2Fdesigns%2Fthingy%2Fintro%2Fkey_features.html
 RATE = 16000
 RECORD_SECONDS = 5
 WAVE_OUTPUT_FILENAME = "output.wav"
+
+SILENCE = chr(0)*2
 
 # Intel ADPCM step variation table
 INDEX_TABLE = [-1, -1, -1, -1, 2, 4, 6, 8, -1, -1, -1, -1, 2, 4, 6, 8, ]
@@ -37,21 +40,25 @@ class RecordingDelegate(DefaultDelegate):
         self.stream = self.p.open(format=FORMAT,
                                   channels=CHANNELS,
                                   rate=RATE,
-                                  input=True,
+                                  output=True,
                                   frames_per_buffer=CHUNK)
 
+        self.stream.start_stream()
         print("* recording")
 
         self.frames = []
 
         self.state = None
+        self.numframes = 0
 
     def handleNotification(self, cHandle, data):
         pcm, self.state = audioop.adpcm2lin(data, 2, self.state)
-        self.frames.append(pcm)
+        # self.frames.append(pcm)
+        self.stream.write(pcm)
+        self.numframes += 1
 
     def finish(self):
-        print("* done recording")
+        print("* done recording", self.numframes, "frames")
 
         self.stream.stop_stream()
         self.stream.close()
@@ -91,10 +98,23 @@ class RecordingDelegate3(DefaultDelegate):
         pcm, _ = audioop.adpcm2lin(adpcm, 2, None)
         # data length is 20 bytes, pcm length is 80 bytes
         self.wavfile = wave.open("out2" + '.wav', 'wb')
-        self.wavfile.setparams((2, 2, 16000, 0, 'NONE', 'NONE'))
+        self.wavfile.setparams((1, 2, 16000, 0, 'NONE', 'NONE'))
         self.wavfile.close()
 
-
+b,a=signal.iirdesign(0.03,0.07,5,40)
+fulldata = np.array([])
+def callback(in_data, frame_count, time_info, flag):
+    global audiodatas
+    print(audiodatas)
+    if len(audiodatas) == 0:
+        return (SILENCE, pyaudio.paContinue)
+    global b, a, fulldata  # global variables for filter coefficients and array
+    audio_data = np.fromstring(audiodatas, dtype=np.float32)
+    # do whatever with data, in my case I want to hear my data filtered in realtime
+    audio_data = signal.filtfilt(b, a, audio_data, padlen=200).astype(np.float32).tostring()
+    fulldata = np.append(fulldata, audio_data)  # saves filtered data in an array
+    return (audio_data, pyaudio.paContinue)
+audiodatas = b'00x'
 class RecordingDelegate4(DefaultDelegate):
     def __init__(self, handles):
         DefaultDelegate.__init__(self)
@@ -103,21 +123,67 @@ class RecordingDelegate4(DefaultDelegate):
         self.frames = []
         self.state = None
 
-        self.stream = self.audio.open(
-            format=pyaudio.paInt16,
-            channels=1, rate=16000,
-            output=True, stream_callback=self.on_audio_ready)
-
         self.wavfile = wave.open("out2" + '.wav', 'wb')
         self.wavfile.setnchannels(CHANNELS)
         self.wavfile.setsampwidth(self.p.get_sample_size(FORMAT))
         self.wavfile.setframerate(RATE)
+
+        self.stream = self.p.open(
+            format=pyaudio.paInt16,
+            channels=1, rate=16000, frames_per_buffer=20,
+            output=True, stream_callback=callback)#, start=False)
+        self.stream.start_stream()
+
+        self.numframes = 0
+        print("recording")
+
+    def handleNotification(self, cHandle, data):
+        global audiodatas
+        # thingy_char = self.handles[cHandle]
+        # data = thingy_char.conversion_func(data)
+        pcm = adpcm_decode(data)
+        audiodatas = pcm
+        #self.stream.write(pcm)
+        # free = self.stream.get_write_available()  # How much space is left in the buffer?
+        # if free > CHUNK:  # Is there a lot of space in the buffer?
+        #     tofill = free - CHUNK
+        #     self.stream.write(SILENCE * tofill)  # Fill it with silence
+
+        # self.wavfile.writeframes(pcm)
+        self.numframes += 1
+
+    def finish(self):
+        print("* done recording", self.numframes, "frames")
+
+        self.stream.stop_stream()
+        self.stream.close()
+
+        self.p.terminate()
+        self.wavfile.close()
+
+
+class RecordingDelegate5(DefaultDelegate):
+    def __init__(self, handles):
+        DefaultDelegate.__init__(self)
+        self.handles = handles
+        self.p = pyaudio.PyAudio()
+        self.wavfile = wave.open("out4" + '.wav', 'wb')
+        self.wavfile.setnchannels(CHANNELS)
+        self.wavfile.setsampwidth(self.p.get_sample_size(FORMAT))
+        self.wavfile.setframerate(RATE)
+        # self.wavfile.setnframes(256)
+        # self.wavfile.setframerate(RATE)
         self.numframes = 0
         print("* recording")
+        self.state = None
 
     def handleNotification(self, cHandle, data):
         pcm = adpcm_decode(data)
-        self.wavfile.writeframes(pcm)
+        pcm2, self.state = audioop.adpcm2lin(data, 2, self.state)
+
+        p1 = Struct('< 40h').unpack(pcm)
+        p2 = Struct('< 40h').unpack(pcm2)
+        self.wavfile.writeframes(p1)
         self.numframes += 1
 
     def finish(self):
@@ -126,7 +192,7 @@ class RecordingDelegate4(DefaultDelegate):
 
 
 if __name__ == "__main__":
-    CHUNK = 1024
+    CHUNK = 256
     FORMAT = pyaudio.paInt16
     CHANNELS = 2
     RATE = 44100
