@@ -62,7 +62,11 @@ def rotation(data):
     return rot_matrix
 
 def euler(data):
-    (roll, pitch, yaw) = Struct('< 3i').unpack(data)
+    # Divide by two bytes (1<<16 or 2^16 or 65536) to get correct value
+    #source: https://github.com/NordicSemiconductor/webapp-nordic-thingy/blob/master/src/my-app.html
+    #(roll, pitch, yaw) = Struct('< 3i').unpack(data)
+    # (roll1, pitch1, yaw1) = [int(360 *i / 23580000) for i in Struct('< 3i').unpack(data)]
+    (roll, pitch, yaw) = [int(i / 65536) for i in Struct('< 3i').unpack(data)]
     return (roll, pitch, yaw)
 
 def degToCompass(num):
@@ -72,12 +76,12 @@ def degToCompass(num):
 
 def heading_degrees(data):
     h = Struct('< i').unpack(data)
-    heading = int(360 * h[0] / 23580000)
+    heading = int(h[0] / 65536)
     return heading
 
 def heading(data):
     h = Struct('< i').unpack(data)
-    heading = int(360 * h[0] / 23580000)
+    heading = int(h[0] / 65536)
     compass = degToCompass(heading)
     return compass
 
