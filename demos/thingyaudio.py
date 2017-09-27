@@ -101,20 +101,20 @@ class RecordingDelegate3(DefaultDelegate):
         self.wavfile.setparams((1, 2, 16000, 0, 'NONE', 'NONE'))
         self.wavfile.close()
 
-b,a=signal.iirdesign(0.03,0.07,5,40)
-fulldata = np.array([])
-def callback(in_data, frame_count, time_info, flag):
-    global audiodatas
-    print(audiodatas)
-    if len(audiodatas) == 0:
-        return (SILENCE, pyaudio.paContinue)
-    global b, a, fulldata  # global variables for filter coefficients and array
-    audio_data = np.fromstring(audiodatas, dtype=np.float32)
-    # do whatever with data, in my case I want to hear my data filtered in realtime
-    audio_data = signal.filtfilt(b, a, audio_data, padlen=200).astype(np.float32).tostring()
-    fulldata = np.append(fulldata, audio_data)  # saves filtered data in an array
-    return (audio_data, pyaudio.paContinue)
-audiodatas = b'00x'
+# b,a=signal.iirdesign(0.03,0.07,5,40)
+# fulldata = np.array([])
+# def callback(in_data, frame_count, time_info, flag):
+#     global audiodatas
+#     print(audiodatas)
+#     if len(audiodatas) == 0:
+#         return (SILENCE, pyaudio.paContinue)
+#     global b, a, fulldata  # global variables for filter coefficients and array
+#     audio_data = np.fromstring(audiodatas, dtype=np.float32)
+#     # do whatever with data, in my case I want to hear my data filtered in realtime
+#     audio_data = signal.filtfilt(b, a, audio_data, padlen=200).astype(np.float32).tostring()
+#     fulldata = np.append(fulldata, audio_data)  # saves filtered data in an array
+#     return (audio_data, pyaudio.paContinue)
+# audiodatas = b'00x'
 class RecordingDelegate4(DefaultDelegate):
     def __init__(self, handles):
         DefaultDelegate.__init__(self)
@@ -131,19 +131,19 @@ class RecordingDelegate4(DefaultDelegate):
         self.stream = self.p.open(
             format=pyaudio.paInt16,
             channels=1, rate=16000, frames_per_buffer=20,
-            output=True, stream_callback=callback)#, start=False)
+            output=True) #, stream_callback=callback)#, start=False)
         self.stream.start_stream()
 
         self.numframes = 0
         print("recording")
 
     def handleNotification(self, cHandle, data):
-        global audiodatas
+        # global audiodatas
         # thingy_char = self.handles[cHandle]
         # data = thingy_char.conversion_func(data)
         pcm = adpcm_decode(data)
-        audiodatas = pcm
-        #self.stream.write(pcm)
+        # audiodatas = pcm
+        self.stream.write(pcm)
         # free = self.stream.get_write_available()  # How much space is left in the buffer?
         # if free > CHUNK:  # Is there a lot of space in the buffer?
         #     tofill = free - CHUNK
@@ -171,7 +171,7 @@ class RecordingDelegate5(DefaultDelegate):
         self.wavfile.setnchannels(CHANNELS)
         self.wavfile.setsampwidth(self.p.get_sample_size(FORMAT))
         self.wavfile.setframerate(RATE)
-        # self.wavfile.setnframes(256)
+        # self.wavfile.setnframes(96)
         # self.wavfile.setframerate(RATE)
         self.numframes = 0
         print("* recording")
@@ -181,9 +181,9 @@ class RecordingDelegate5(DefaultDelegate):
         pcm = adpcm_decode(data)
         pcm2, self.state = audioop.adpcm2lin(data, 2, self.state)
 
-        p1 = Struct('< 40h').unpack(pcm)
-        p2 = Struct('< 40h').unpack(pcm2)
-        self.wavfile.writeframes(p1)
+        # p1 = Struct('< 40h').unpack(pcm)
+        # p2 = Struct('< 40h').unpack(pcm2)
+        self.wavfile.writeframes(pcm2)
         self.numframes += 1
 
     def finish(self):
