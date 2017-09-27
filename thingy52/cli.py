@@ -2,15 +2,14 @@
 
 """Console script for gcloud_cli."""
 
-import click
 import atexit
 
+import click
+
+from thingy52 import delegates
+from thingy52.services import Color
 from . import __version__
 from . import thingy52
-from thingy52 import delegates
-from thingy52.audio import RecordingDelegate4
-from thingy52.services import Color
-import time
 
 CONTEXT_SETTINGS = dict(
     obj={},
@@ -98,25 +97,6 @@ def sound(ctx, feature, enable):
         t.waitForNotifications(1.0)
         print("Waiting...")
 
-@main.command()
-@click.pass_context
-def record(ctx):
-    """
-    """
-    address = ctx.obj.get("address")
-
-    t = thingy52.Thingy52(address)
-    # Set mic mode to ADPCM
-    t.sound.activate_speaker_stream(1, 1)
-
-    atexit.register(t.disconnect)
-    rec = RecordingDelegate4(t.handles)
-    t.setDelegate(rec)
-    atexit.register(rec.finish)
-    t.sound.toggle_notifications(characteristic="microphone", enable=True)
-    now = time.time()
-    while time.time() - now < 3:
-        t.waitForNotifications(1.0)
 
 @main.command()
 @click.pass_context
@@ -128,7 +108,7 @@ def speaker_stream(ctx):
     t = thingy52.Thingy52(address)
     atexit.register(t.disconnect)
 
-    t.sound.activate_speaker_stream(2, 1)
+    t.sound.activate_speaker_stream(speaker_mode=2, mic_mode=1)
     while True:
         print("k")
         t.sound.stream_speaker()
@@ -144,7 +124,7 @@ def speaker_frequency(ctx):
     t = thingy52.Thingy52(address)
     atexit.register(t.disconnect)
     t.sound.activate_speaker_stream(1, 1)
-    t.sound.stream_frequency(10500, 500, 50)
+    t.sound.stream_frequency(frequency=10500, duration=500, volume=50)
 
 
 @main.command()
