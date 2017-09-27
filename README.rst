@@ -32,7 +32,7 @@ Python 3:
 .. highlight:: bash
 
     $ sudo apt-get install libglib2.0-dev
-    $ pip install thingy52
+    $ pip3 install thingy52
 
 If you find bluepy-helper isn't being built, please try:
 

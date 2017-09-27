@@ -10,7 +10,7 @@ c_type_double = Struct('< d').unpack
 
 
 def unpack_float(integer, decimal):
-    return float(integer + decimal / 100)
+    return float(integer + decimal / 100.)
 
 
 def unpack_bool(data):

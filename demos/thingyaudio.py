@@ -170,8 +170,8 @@ class RecordingDelegate5(DefaultDelegate):
         self.wavfile = wave.open("out4" + '.wav', 'wb')
         self.wavfile.setnchannels(CHANNELS)
         self.wavfile.setsampwidth(self.p.get_sample_size(FORMAT))
-        self.wavfile.setframerate(RATE)
-        # self.wavfile.setnframes(96)
+        self.wavfile.setframerate(int(RATE/60))
+        # self.wavfile.setnframes(256)
         # self.wavfile.setframerate(RATE)
         self.numframes = 0
         print("* recording")
