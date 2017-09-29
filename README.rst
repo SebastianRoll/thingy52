@@ -99,9 +99,11 @@ TODO
 
   - [ ] Gif of demo (controlling Picam)
 
-- [ ] Conda package (conda-forge)
+- [ ] Distribution
 
-- [X] Pypi package
+  - [ ] Conda package (conda-forge)
+
+  - [X] Pypi package
 
 More information
 ----------------
