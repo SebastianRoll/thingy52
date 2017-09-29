@@ -60,6 +60,12 @@ Features
 * Some fun demos to get you started
 
 
+BUGS
+----
+
+The first connection attempt after turning on the thingy:52 usually fails, but it works after that.
+
+
 TODO
 ----
 
