@@ -5,7 +5,7 @@ from demos.thingyaudio import RecordingDelegate1, RecordingDelegate2, RecordingD
 from thingy52.thingy52 import Thingy52
 
 # use your thingy's MAC address printed on the device.
-THINGY_ADDRESS = "E2:D9:D5:C6:30:26"
+THINGY_ADDRESS = "DB:B7:18:34:E3:9E"
 RECORD_DURATION_SECONDS = 2
 RECORDING_DELEGATE = RecordingDelegate4
 
