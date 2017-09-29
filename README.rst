@@ -22,13 +22,23 @@ Interface to Thingy:52
 
 
 * Free software: MIT license
-* Documentation: https://thingy52.readthedocs.io.
+* Documentation: https://thingy52.readthedocs.io. <- coming soon
 
+This package is an implementation of a Python interface for the Thingy:52 ble IoT Sensor Kit.
+
+More information about Thingy:52 is found here: https://www.nordicsemi.com/eng/Products/Nordic-Thingy-52
+
+Full disclosure: A reference implementation for thingy:52 already exists in the popular bluepy package:
+
+https://github.com/IanHarvey/bluepy
 
 Install
 -------
 
+Python 2 support <- coming soon.
+
 Python 3:
+
 .. highlight:: bash
 
     $ sudo apt-get install libglib2.0-dev
@@ -43,7 +53,55 @@ If you find bluepy-helper isn't being built, please try:
 Features
 --------
 
-* TODO
+* CLI interface using Click
+
+* Data conversion functions for all sensors (not yet fully complete)
+
+* Some fun demos to get you started
+
+
+TODO
+----
+
+- [ ] Python 2.X
+
+- [X] Python 3.X
+
+- [ ] Implementation
+
+  - [X] Toggle notify
+
+  - [ ] Notification frequency
+
+  - [X] Read/Write
+
+  - [X] Services
+
+    - [X] Environment
+
+    - [X] Motion
+
+    - [X] User Interface
+
+    - [ ] Audio
+
+- [ ] Documentation
+
+  - [ ] Installation
+
+  - [ ] Usage
+
+  - [ ] Convert docs to markdown
+
+  - [ ] Badges (CI, Readthedocs)
+
+  - [ ] Photo of thingy:52
+
+  - [ ] Gif of demo (controlling Picam)
+
+- [ ] Conda package (conda-forge)
+
+- [X] Pypi package
 
 More information
 ----------------
