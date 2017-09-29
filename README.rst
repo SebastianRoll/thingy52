@@ -50,6 +50,8 @@ If you find bluepy-helper isn't being built, please try:
 
     $ pip install --no-binary :all: thingy52
 
+To use the recording demo (/demo/record.py) you will need the PyAudio package (https://people.csail.mit.edu/hubert/pyaudio/).
+
 Features
 --------
 
