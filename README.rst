@@ -1,3 +1,5 @@
+.. image:: demos/demo_camera_udp.gif
+
 =========
 Thingy:52
 =========
