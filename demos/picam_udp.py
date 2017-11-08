@@ -9,13 +9,13 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-t = Thingy52("E2:D9:D5:C6:30:26")
+t = Thingy52("EF:D5:24:2C:FE:73")
 
 # minimum delta sum of pan+tilt angles for new request
 MANHATTAN_ANGLE_THRESHOLD = 1
 # minimum elapsed time between requests
-MIN_ELAPSED_TIME = 0.05
-URL = "192.168.1.109"
+MIN_ELAPSED_TIME = 0.10
+URL = "10.0.0.151"
 PORT = 6789
 
 class PicamDelegate(DefaultDelegate):
@@ -98,7 +98,7 @@ class PicamDelegate(DefaultDelegate):
 
     def on_button_pressed(self):
         self._button_activated = not self._button_activated
-        brightness = 255 if self._button_activated else 0
+        brightness = 50 if self._button_activated else 0
         try:
             self.clientSock.sendto(str.encode(self.led_url.format(brightness)), (self.url, self.port))
         except Exception as e:
@@ -107,10 +107,12 @@ class PicamDelegate(DefaultDelegate):
 
 atexit.register(t.disconnect)
 t.setDelegate(PicamDelegate(t, t.handles))
-
+sleep(3)
 # button toggles LED
 t.ui.toggle_notifications(characteristic="button", enable=True)
 
 t.motion.toggle_notifications(characteristic="euler", enable=True)
+t.motion.toggle_notifications(characteristic="euler", enable=False)
+t.motion.toggle_notifications(characteristic="euler", enable=True)
 while True:
-    t.waitForNotifications(0.1)
+    t.waitForNotifications(5)

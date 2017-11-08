@@ -25,9 +25,11 @@ class RecordingDelegate1(DefaultDelegate):
 
         self.stream = self.p.open(format=FORMAT,
                                   channels=CHANNELS,
-                                  rate=RATE,
+                                  rate=8000,
                                   output=True,
-                                  frames_per_buffer=CHUNK)
+                                  # frames_per_buffer=2,
+                                  frames_per_buffer=CHUNK,
+                                  )
 
         self.stream.start_stream()
         print("* recording")
@@ -38,9 +40,17 @@ class RecordingDelegate1(DefaultDelegate):
         self.numframes = 0
 
     def handleNotification(self, cHandle, data):
+        # print(self.stream.get_write_available())
+
         pcm, self.state = audioop.adpcm2lin(data, 2, self.state)
+        b = Struct('< 40h').unpack(pcm)
         # self.frames.append(pcm)
         self.stream.write(pcm)
+        free = self.stream.get_write_available()
+        # print(len(pcm)//2, free)
+        m = Struct('< {}h'.format(free//2)).pack(*[b[-1]]*(free//2))
+        self.stream.write(m)
+        # print(self.stream.get_write_available())
         self.numframes += 1
 
     def finish(self):
@@ -63,7 +73,7 @@ class RecordingDelegate1(DefaultDelegate):
 # ->  convert ADCPM to linear PCM with audioop.adpcm2lin()
 # -> write PCM to file
 class RecordingDelegate2(DefaultDelegate):
-    def __init__(self, handles, audio_filename='RecordingDelegate3.wav'):
+    def __init__(self, handles, audio_filename='RecordingDelegate2.wav'):
         DefaultDelegate.__init__(self)
         self.handles = handles
         self.p = pyaudio.PyAudio()
@@ -77,6 +87,7 @@ class RecordingDelegate2(DefaultDelegate):
         self.numframes = 0
 
     def handleNotification(self, cHandle, data):
+        print(len(data))
         self.adpcmfile.write(data)
         self.numframes += 1
 
@@ -86,10 +97,13 @@ class RecordingDelegate2(DefaultDelegate):
 
         with open('recording.adpcm', 'rb') as f:
             adpcm = f.read()
+        print(len(adpcm))
         pcm, _ = audioop.adpcm2lin(adpcm, 2, None)
+        print(len(pcm))
         # data length is 20 bytes, pcm length is 80 bytes
         self.wavfile = wave.open(self.audio_filename, 'wb')
-        self.wavfile.setparams((1, 2, 16000, 0, 'NONE', 'NONE'))
+        self.wavfile.setparams((1, 2, 8000, self.numframes*40, 'NONE', 'NONE'))
+        self.wavfile.writeframes(pcm)
         self.wavfile.close()
 
 
@@ -97,7 +111,7 @@ class RecordingDelegate2(DefaultDelegate):
 # https://github.com/NordicSemiconductor/Nordic-Thingy52-Nodejs/blob/master/examples/microphone.js
 # Custom conversion func `adpcm_decode(data)` and audioop.adpcm2lin() return identical PCM streams.
 class RecordingDelegate3(DefaultDelegate):
-    def __init__(self, handles, audio_filename='RecordingDelegate4.wav'):
+    def __init__(self, handles, audio_filename='RecordingDelegate3.wav'):
         DefaultDelegate.__init__(self)
         self.handles = handles
         self.p = pyaudio.PyAudio()
@@ -122,7 +136,16 @@ class RecordingDelegate3(DefaultDelegate):
         # thingy_char = self.handles[cHandle]
         # data = thingy_char.conversion_func(data)
         pcm = adpcm_decode(data)
-        self.stream.write(pcm)
+        # self.stream.write(pcm)
+        b = struct.unpack('<' + str(len(pcm) // 2) + "h", pcm)
+        x = np.arange(0, len(b))
+        y = np.array(b)
+        # yn = y - 180
+        f = interpolate.interp1d(x, y)
+        xnew = np.arange(0, len(b) - 1, 0.1523)
+        new_pcm = f(xnew)
+        # self.frames.append(new_pcm.tobytes())
+        self.stream.write(new_pcm.tobytes())
 
         # Todo: do we need to fill remaining buffer with empty data?
         # free = self.stream.get_write_available()  # How much space is left in the buffer?
@@ -142,10 +165,71 @@ class RecordingDelegate3(DefaultDelegate):
         self.p.terminate()
         self.wavfile.close()
 
+        # import numpy, pylab
+        # data = numpy.memmap('RecordingDelegate4.wav', dtype='h', mode='r')
+        # pylab.plot(data)
+        # pylab.show()
 
+
+import numpy as np
+from scipy import interpolate
 # Write to wavefile directly, after converting ADPCM->PCM
 # Result: Noise with duration under a second
 class RecordingDelegate4(DefaultDelegate):
+    def __init__(self, handles, audio_filename='RecordingDelegate4.wav'):
+        DefaultDelegate.__init__(self)
+        self.handles = handles
+        self.p = pyaudio.PyAudio()
+        self.wavfile = wave.open(audio_filename, 'wb')
+        self.wavfile.setnchannels(CHANNELS)
+        self.wavfile.setsampwidth(self.p.get_sample_size(FORMAT))
+        self.wavfile.setframerate(16000)
+        # this gets us close
+        # self.wavfile.setframerate(int(RATE/4))
+        self.numframes = 0
+        self.frames = []
+        print("* recording")
+        self.state = None
+
+    def handleNotification(self, cHandle, data):
+        #pcm = adpcm_decode(data)
+        pcm2, self.state = audioop.adpcm2lin(data, 2, self.state)
+
+        # p1 = Struct('< 40h').unpack(pcm)
+        # p2 = Struct('< 40h').unpack(pcm2)
+        byteorder = '<'
+        rawbytes = pcm2
+        b = struct.unpack(byteorder + str(len(rawbytes) // 2) + "h", rawbytes)
+        # for frame in b:
+        #     # print(frame)
+        #     m = Struct('< h').pack(frame)
+        #     # print(m)
+        #     self.frames.append(m)
+
+        # time_old = np.linspace(0, , len(pcm2))
+        # time_new = np.linspace(0, duration, len(pcm2)*4)
+        x = np.arange(0, len(b))
+        y = np.array(b)
+        # yn = y - 180
+        f = interpolate.interp1d(x, y)
+        xnew = np.arange(0, len(b)-1, 0.1523)
+        new_pcm = f(xnew)
+        self.frames.append(new_pcm.tobytes())
+
+        self.numframes += 1
+
+    def finish(self):
+        print("* done recording", self.numframes, "frames")
+        # self.wavfile.setnframes(self.numframes)
+        self.wavfile.setnframes(self.numframes*40//2)
+
+        [self.wavfile.writeframes(frame) for frame in self.frames]
+
+        self.wavfile.close()
+
+# Write to wavefile directly, after converting ADPCM->PCM
+# Result: Noise with duration under a second
+class RecordingDelegate5(DefaultDelegate):
     def __init__(self, handles, audio_filename='RecordingDelegate5.wav'):
         DefaultDelegate.__init__(self)
         self.handles = handles
@@ -153,22 +237,56 @@ class RecordingDelegate4(DefaultDelegate):
         self.wavfile = wave.open(audio_filename, 'wb')
         self.wavfile.setnchannels(CHANNELS)
         self.wavfile.setsampwidth(self.p.get_sample_size(FORMAT))
-        self.wavfile.setframerate(int(RATE))
+        # maybe framerate should be:
+        # 16000 samples/second
+        # or
+        # 40 samples/frame * 60 frames/second = 2400 samples/second
+        # self.wavfile.setframerate(2400)
+        self.wavfile.setframerate(RATE)
+        # this gets us close. Todo: try offsetting the bytes with -128
+        # self.wavfile.setframerate(int(RATE/4))
         self.numframes = 0
+        self.frames = []
         print("* recording")
         self.state = None
 
     def handleNotification(self, cHandle, data):
-        pcm = adpcm_decode(data)
+        #pcm = adpcm_decode(data)
         pcm2, self.state = audioop.adpcm2lin(data, 2, self.state)
 
         # p1 = Struct('< 40h').unpack(pcm)
         # p2 = Struct('< 40h').unpack(pcm2)
-        self.wavfile.writeframes(pcm2)
+        byteorder = '<'
+        rawbytes = pcm2
+        b = struct.unpack(byteorder + str(len(rawbytes) // 2) + "h", rawbytes)
+
+        self.frames.append(pcm2)
+
+        import numpy as np
+        from scipy import interpolate
+        # time_old = np.linspace(0, , len(pcm2))
+        # time_new = np.linspace(0, duration, len(pcm2)*4)
+        x = np.arange(0, len(b))
+        y = np.array(b)
+        yn = y - 180
+        f = interpolate.interp1d(x, yn)
+        xnew = np.arange(0, len(b)-1, 0.5)
+        new_pcm = f(xnew)
+
+        # self.frames.append(new_pcm)
         self.numframes += 1
 
     def finish(self):
         print("* done recording", self.numframes, "frames")
+        # 1 channel, 2 bytes per sample -> each frame is 2 bytes
+        # 80 bytes per packet = 40 frames per package
+        # total packets in stream is X=self.numframes*40
+        # frames per stream is numfr = X//2 = self.numframes*40
+        self.wavfile.setnframes(self.numframes*40)
+
+        # Todo: Try Wave_write.writeframesraw(data) - "Write audio frames, without correcting nframes".
+        [self.wavfile.writeframes(frame) for frame in self.frames]
+
         self.wavfile.close()
 
 
@@ -182,7 +300,6 @@ def record_laptop_microphone():
     WAVE_OUTPUT_FILENAME = "output.wav"
 
     p = pyaudio.PyAudio()
-
     stream = p.open(format=FORMAT,
                     channels=CHANNELS,
                     rate=RATE,

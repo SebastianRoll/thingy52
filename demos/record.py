@@ -1,13 +1,13 @@
 import atexit
 from time import time
 
-from demos.thingyaudio import RecordingDelegate1, RecordingDelegate2, RecordingDelegate3, RecordingDelegate4
+from demos.thingyaudio import RecordingDelegate1, RecordingDelegate2, RecordingDelegate3, RecordingDelegate4, RecordingDelegate5
 from thingy52.thingy52 import Thingy52
 
 # use your thingy's MAC address printed on the device.
-THINGY_ADDRESS = "DB:B7:18:34:E3:9E"
-RECORD_DURATION_SECONDS = 2
-RECORDING_DELEGATE = RecordingDelegate4
+THINGY_ADDRESS = "EF:D5:24:2C:FE:73"
+RECORD_DURATION_SECONDS = 10
+RECORDING_DELEGATE = RecordingDelegate1
 
 t = Thingy52(THINGY_ADDRESS)
 # Set mic mode to ADPCM
