@@ -1,5 +1,3 @@
-.. image:: demos/demo_camera_udp.gif
-
 =========
 Thingy:52
 =========
@@ -20,8 +18,9 @@ Thingy:52
      :alt: Updates
 
 
-Interface to Thingy:52
+Python interface to Thingy:52
 
+.. image:: demos/demo_camera_udp.gif
 
 * Free software: MIT license
 * Documentation: https://thingy52.readthedocs.io. <- coming soon
